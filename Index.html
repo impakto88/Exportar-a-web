@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IR Producciones - Calculadora de Exportación de Vídeo para Web</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #f5f5f5;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #00bfff;
+      margin-bottom: 1rem;
+    }
+
+    .calculator {
+      background-color: #1c1c1c;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0,191,255,0.2);
+      transition: outline 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .quality-high    { outline: 3px solid #00ff6a; box-shadow: 0 0 15px rgba(0, 255, 106, 0.5); }
+    .quality-medium  { outline: 3px solid #ffcc00; box-shadow: 0 0 15px rgba(255, 204, 0, 0.5); }
+    .quality-low     { outline: 3px solid #ff5e00; box-shadow: 0 0 15px rgba(255, 94, 0, 0.5); }
+    .quality-verylow { outline: 3px solid #ff1a1a; box-shadow: 0 0 15px rgba(255, 26, 26, 0.5); }
+
+    label, input, select {
+      display: block;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    input[type="number"], select {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      background-color: #333;
+      color: #f5f5f5;
+    }
+
+    button {
+      padding: 0.7rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #00bfff;
+      color: #000;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .reset-button {
+      background-color: #ff4d4d;
+      margin-top: -0.5rem;
+    }
+
+    .output {
+      margin-top: 2rem;
+      background-color: #262626;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    .group {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
+    .render-settings { background-color: #1e3a5f; }
+    .video-settings  { background-color: #2e5f3e; }
+    .audio-settings  { background-color: #5f2e2e; }
+    .other-settings  { background-color: #444444; }
+    .highlight       { background-color: #ffc107; color: #000; font-weight: bold; padding: 0.5rem; border-radius: 5px; text-align: center; margin-bottom: 0.5rem; }
+    .recommendation  { background-color: #87cefa; color: #000; font-weight: bold; padding: 0.5rem; border-radius: 5px; text-align: center; }
+
+    .group p {
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>⚡ IR Producciones - Calculadora de Exportación Web</h1>
+  <div id="calculator" class="calculator">
+    <label for="duration">Duración del vídeo (en segundos):</label>
+    <input type="number" id="duration" placeholder="Ej. 83">
+
+    <label for="fps">Fotogramas por segundo (FPS):</label>
+    <select id="fps">
+      <option value="24">24</option>
+      <option value="25">25</option>
+      <option value="30">30</option>
+      <option value="50" selected>50</option>
+      <option value="60">60</option>
+      <option value="100">100</option>
+      <option value="120">120</option>
+    </select>
+
+    <label for="audio">Audio:</label>
+    <select id="audio">
+      <option value="no">Sin audio</option>
+      <option value="yes">Con audio</option>
+    </select>
+
+    <button onclick="calcularExportacion()">Calcular ajustes ideales</button>
+    <button class="reset-button" onclick="resetearTodo()">Resetear ajustes</button>
+
+    <div class="output" id="output" style="display: none;">
+      <div class="highlight">
+        Tamaño aproximado del archivo: <span style="font-weight: normal;" id="peso"></span> MB
+      </div>
+      <div class="recommendation">
+        Tamaño recomendado para web: <span style="font-weight: normal;" id="recomendado"></span> MB
+      </div>
+
+      <div class="group render-settings">
+        <p><strong>Resolución recomendada:</strong> <span id="resolucion"></span></p>
+        <p><strong>Formato de archivo:</strong> MP4</p>
+        <p><strong>Códec de vídeo:</strong> H.264</p>
+        <p><strong>Frecuencia de imagen (FPS):</strong> <span id="fpsOutput"></span></p>
+      </div>
+
+      <div class="group video-settings">
+        <p><strong>Bitrate ideal:</strong> <span id="bitrate"></span> Kb/s</p>
+        <p><strong>Perfil de codificación:</strong> Main</p>
+        <p><strong>Entropía:</strong> Automático</p>
+        <p><strong>Aspecto del píxel:</strong> Cuadrado (1.0)</p>
+      </div>
+
+      <div class="group audio-settings">
+        <p><strong>Audio:</strong> <span id="audioOutput"></span></p>
+        <p><strong>Exportar audio:</strong> <span id="audioRender"></span></p>
+      </div>
+
+      <div class="group other-settings">
+        <p><strong>Codificación multipase:</strong> Opcional (mejora la calidad si se activa)</p>
+        <p><strong>Reorganización de fotogramas:</strong> Activada</p>
+        <p><strong>Renderizar todas las pistas de vídeo:</strong> Activado</p>
+        <p><strong>Redimensionamiento con máxima calidad:</strong> Activado</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("duration").addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        calcularExportacion();
+      }
+    });
+
+    function calcularExportacion() {
+      const duration = parseFloat(document.getElementById("duration").value);
+      const fps = parseInt(document.getElementById("fps").value);
+      const hasAudio = document.getElementById("audio").value === "yes";
+      const calculatorDiv = document.getElementById("calculator");
+
+      calculatorDiv.classList.remove("quality-high", "quality-medium", "quality-low", "quality-verylow");
+
+      if (isNaN(duration) || duration <= 0) {
+        alert("Por favor, introduce una duración válida en segundos.");
+        return;
+      }
+
+      const recommendedSize = (duration <= 30) ? 4 : (duration <= 60 ? 6 : (duration <= 120 ? 12 : 20));
+      let suggestedBitrate;
+      if (duration <= 15) suggestedBitrate = 3000;
+      else if (duration <= 30) suggestedBitrate = 2500;
+      else if (duration <= 60) suggestedBitrate = 2000;
+      else if (duration <= 90) suggestedBitrate = 1500;
+      else if (duration <= 120) suggestedBitrate = 1200;
+      else suggestedBitrate = 1000;
+      if (hasAudio) suggestedBitrate += 96;
+
+      const maxAllowedBitrate = Math.floor((recommendedSize * 1024 * 8) / duration);
+      let bitrate = Math.min(suggestedBitrate, maxAllowedBitrate);
+
+      const estimatedSize = ((bitrate * duration) / 8 / 1024).toFixed(1);
+
+      // Clasificación visual por calidad
+      if (bitrate >= 2500) calculatorDiv.classList.add("quality-high");
+      else if (bitrate >= 1500) calculatorDiv.classList.add("quality-medium");
+      else if (bitrate >= 500) calculatorDiv.classList.add("quality-low");
+      else calculatorDiv.classList.add("quality-verylow");
+
+      if (bitrate < 150) {
+        const continuar = confirm("❌ El bitrate es demasiado bajo. El vídeo podría no ser válido para subir a la web. ¿Deseas ver los ajustes de todos modos?");
+        if (!continuar) return;
+      }
+
+      if (parseFloat(estimatedSize) > recommendedSize + 10) {
+        alert("⚠️ Atención: El tamaño estimado supera en más de 10MB el recomendado para Adobe Portfolio. Considera ajustar parámetros.");
+      }
+
+      let resolution;
+      if (bitrate >= 3000) resolution = "1920x1080";
+      else if (bitrate >= 2500) resolution = "1600x900";
+      else if (bitrate >= 1800) resolution = "1280x720";
+      else if (bitrate >= 1200) resolution = "960x540";
+      else if (bitrate >= 900) resolution = "854x480";
+      else resolution = "640x360";
+
+      document.getElementById("resolucion").innerText = resolution;
+      document.getElementById("fpsOutput").innerText = fps + " fps";
+      document.getElementById("bitrate").innerText = bitrate;
+      document.getElementById("peso").innerText = estimatedSize;
+      document.getElementById("recomendado").innerText = recommendedSize;
+      document.getElementById("audioOutput").innerText = hasAudio ? "Activado (AAC 96 kbps)" : "Desactivado";
+      document.getElementById("audioRender").innerText = hasAudio ? "Activado" : "Desactivado";
+      document.getElementById("output").style.display = 'block';
+    }
+
+    function resetearTodo() {
+      document.getElementById("duration").value = "";
+      document.getElementById("fps").value = "50";
+      document.getElementById("audio").value = "no";
+      document.getElementById("output").style.display = 'none';
+      document.getElementById("calculator").classList.remove("quality-high", "quality-medium", "quality-low", "quality-verylow");
+    }
+  </script>
+</body>
+</html>
